@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireboard Tutorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: header, control strip, then contents sidebar beside one step card (or all cards). */
+:root{
+  --bg:#ffffff; --panel:#f6f8fa; --line:#d0d7de; --ink:#1f2328; --muted:#59636e;
+  --accent:#0969da; --accent-ink:#ffffff; --hl:#ddf4ff;
+  --tip-bg:#dafbe1; --tip-line:#1a7f37; --tip-ink:#116329;
+  --warn-bg:#fff8c5; --warn-line:#9a6700; --warn-ink:#7d4e00;
+  --why-bg:#ddf4ff; --why-line:#0969da; --why-ink:#0550ae;
+  --body:"DM Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1117; --panel:#161b22; --line:#30363d; --ink:#e6edf3; --muted:#9198a1;
+    --accent:#4493f8; --accent-ink:#0d1117; --hl:#121d2f;
+    --tip-bg:#12261e; --tip-line:#3fb950; --tip-ink:#7ee2a8;
+    --warn-bg:#272115; --warn-line:#d29922; --warn-ink:#e3b341;
+    --why-bg:#121d2f; --why-line:#4493f8; --why-ink:#79c0ff;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1117; --panel:#161b22; --line:#30363d; --ink:#e6edf3; --muted:#9198a1;
+  --accent:#4493f8; --accent-ink:#0d1117; --hl:#121d2f;
+  --tip-bg:#12261e; --tip-line:#3fb950; --tip-ink:#7ee2a8;
+  --warn-bg:#272115; --warn-line:#d29922; --warn-ink:#e3b341;
+  --why-bg:#121d2f; --why-line:#4493f8; --why-ink:#79c0ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.6 var(--body)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+header.top{border-bottom:1px solid var(--line);background:var(--panel)}
+header.top .wrap{padding-top:28px;padding-bottom:22px}
+h1{font-size:clamp(28px,4vw,40px);line-height:1.15;margin:0 0 8px;text-wrap:balance}
+.intro{margin:0 0 12px;max-width:65ch;color:var(--ink)}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;font:500 14px/1.4 var(--mono);color:var(--muted)}
+
+.controls{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.controls .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-top:10px;padding-bottom:10px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:var(--panel);border:0;padding:7px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.btn{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 14px;cursor:pointer;min-height:40px}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.grow{flex:1}
+.prog{display:flex;align-items:center;gap:10px;min-width:200px;flex:1}
+.bar{flex:1;height:8px;background:var(--panel);border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.prog span{font:500 14px var(--mono);white-space:nowrap}
+
+details.voice{position:relative}
+details.voice summary{list-style:none;cursor:pointer}
+details.voice summary::-webkit-details-marker{display:none}
+.vpanel{position:absolute;right:0;top:calc(100% + 6px);width:min(320px,90vw);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:grid;gap:10px}
+.vpanel label{font-size:14px;font-weight:600;display:grid;gap:4px}
+.vpanel select,.vpanel input[type=range]{width:100%}
+.vpanel select{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px}
+.vpanel .chk{display:flex;gap:8px;align-items:center}
+.vpanel p{margin:0;font-size:13px;color:var(--muted);line-height:1.45}
+
+.layout{display:grid;grid-template-columns:260px 1fr;gap:28px;padding-top:24px;padding-bottom:60px;align-items:start}
+nav.toc{position:sticky;top:78px;max-height:calc(100vh - 96px);overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:12px}
+nav.toc h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:2px 6px 8px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+nav.toc button{width:100%;display:grid;grid-template-columns:28px 1fr 16px;gap:6px;align-items:center;text-align:left;background:none;border:0;border-radius:6px;padding:6px 8px;cursor:pointer;font-size:15px;line-height:1.3}
+nav.toc button:hover{background:var(--hl)}
+nav.toc button[aria-current="step"]{background:var(--hl);font-weight:700;box-shadow:inset 3px 0 0 var(--accent)}
+nav.toc .n{font:700 13px var(--mono);color:var(--muted)}
+nav.toc .ok{color:var(--tip-line);font-weight:700}
+
+.steps{display:grid;gap:28px;min-width:0}
+.card{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:24px;scroll-margin-top:84px;transition:box-shadow .2s,border-color .2s}
+.card.reading{border-color:var(--accent);box-shadow:0 0 0 3px var(--hl)}
+.mode-one .card:not(.cur){display:none}
+.chead{display:flex;align-items:baseline;gap:14px;margin-bottom:8px}
+.num{font:700 15px var(--mono);color:var(--accent-ink);background:var(--accent);border-radius:8px;padding:3px 10px;flex:none}
+.card h2{margin:0;font-size:clamp(22px,2.6vw,27px);line-height:1.25;text-wrap:balance}
+.card p.body{margin:0 0 14px;max-width:68ch}
+.call{border-left:4px solid;border-radius:6px;padding:10px 14px;margin:0 0 10px;max-width:68ch;font-size:16px}
+.call b.k{display:inline-block;margin-right:6px;font-weight:700}
+.call.tip{background:var(--tip-bg);border-color:var(--tip-line)}
+.call.tip b.k{color:var(--tip-ink)}
+.call.warning{background:var(--warn-bg);border-color:var(--warn-line)}
+.call.warning b.k{color:var(--warn-ink)}
+.call.why{background:var(--why-bg);border-color:var(--why-line)}
+.call.why b.k{color:var(--why-ink)}
+figure{margin:16px 0 0}
+.zoom{display:block;width:100%;padding:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);cursor:zoom-in}
+.zoom img{display:block;width:100%;height:auto}
+figcaption{font-size:13px;color:var(--muted);margin-top:6px}
+.cfoot{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:16px}
+.narr{display:inline-flex;gap:6px}
+.done{display:inline-flex;align-items:center;gap:8px;cursor:pointer;margin-left:auto;font-weight:600}
+.done input{width:20px;height:20px;accent-color:var(--tip-line)}
+.pager{display:flex;justify-content:space-between;gap:12px}
+.mode-all .pager{display:none}
+
+.lb{position:fixed;inset:0;z-index:50;background:rgba(1,4,9,.88);display:flex;flex-direction:column;padding:16px;gap:10px}
+.lb[hidden]{display:none}
+.lb .lbbar{display:flex;justify-content:space-between;align-items:center;gap:12px;color:#e6edf3}
+.lb .lbbar p{margin:0;font-weight:600}
+.lb .lbimg{flex:1;min-height:0;overflow:auto;display:flex}
+.lb img{margin:auto;max-width:none;width:min(1600px,100%);height:auto}
+.lb .btn{background:#161b22;color:#e6edf3;border-color:#30363d}
+
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+footer .wrap{padding-top:18px;padding-bottom:28px}
+
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr}
+  nav.toc{position:static;max-height:none}
+  .card{padding:18px}
+  .done{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media print{
+  .controls,nav.toc,.pager,.cfoot .narr,.lb{display:none!important}
+  .layout{display:block}
+  .mode-one .card:not(.cur){display:block}
+  .card{break-inside:avoid;border-color:#999;margin-bottom:18px}
+  body{background:#fff;color:#000}
+  .zoom{border-color:#999}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>Wireboard: a step-by-step tutorial</h1>
+    <p class="intro">Build a two-screen wireframe, put one screen in a phone frame, link the screens together, click through it in preview, then export it for your slides.</p>
+    <div class="meta"><span id="m-steps"></span><span>About 15 minutes</span><span>No coding needed</span></div>
+  </div>
+</header>
+
+<div class="controls" role="region" aria-label="Tutorial controls">
+  <div class="wrap">
+    <div class="seg" role="group" aria-label="View">
+      <button type="button" id="v-one" aria-pressed="true">Step by step</button>
+      <button type="button" id="v-all" aria-pressed="false">Show all</button>
+    </div>
+    <div class="prog">
+      <div class="bar" aria-hidden="true"><i id="pbar"></i></div>
+      <span id="ptext"></span>
+    </div>
+    <details class="voice">
+      <summary class="btn">Narration settings</summary>
+      <div class="vpanel">
+        <label class="chk"><input type="checkbox" id="autoplay"> Read each step aloud when I move to it</label>
+        <label for="source">Narration voice
+          <select id="source">
+            <option value="rec">Recorded voice (British, male)</option>
+            <option value="tts">My browser's voice</option>
+          </select>
+        </label>
+        <label for="voice" id="voice-wrap">Browser voice
+          <select id="voice"><option value="">Loading voices…</option></select>
+        </label>
+        <label for="rate">Speed <span id="rate-v">1×</span>
+          <input type="range" id="rate" min="0.75" max="1.5" step="0.05" value="1">
+        </label>
+        <p>Browser voices depend on your browser and device. Edge and Chrome usually offer the most natural ones. Everything that is read aloud is also written on the page.</p>
+      </div>
+    </details>
+    <button type="button" class="btn" id="theme">Light mode</button>
+  </div>
+</div>
+
+<div class="wrap layout">
+  <nav class="toc" aria-label="Steps">
+    <h2>Steps</h2>
+    <ol id="toc"></ol>
+  </nav>
+  <main id="main" class="mode-one">
+    <div class="steps" id="steps"></div>
+    <div class="pager" style="margin-top:18px">
+      <button type="button" class="btn" id="prev">← Previous</button>
+      <button type="button" class="btn primary" id="next">Next →</button>
+    </div>
+  </main>
+</div>
+
+<footer><div class="wrap">Use the ← and → keys to move between steps. Click a screenshot to see it larger.</div></footer>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-labelledby="lb-t" hidden>
+  <div class="lbbar"><p id="lb-t"></p><button type="button" class="btn" id="lb-close">Close (Esc)</button></div>
+  <div class="lbimg"><img id="lb-img" alt=""></div>
+</div>
+
+<div id="live" class="sr" aria-live="polite"></div>
+
+<script>
+/* Edit the steps here. "say" is the narration script read aloud. */
+var STEPS = [
+ {
+  "img": "01-the-workspace.png",
+  "title": "Get to know the workspace",
+  "body": "Wireboard has three areas. **Components** on the left are the parts you can add. The **Board** in the middle holds your screens. **Properties** on the right lets you change whatever is selected. The toolbar along the top has Undo, zoom, **Preview** and **Project**. It opens with one blank screen called **Screen 1**.",
+  "callouts": [
+   [
+    "tip",
+    "Your work saves automatically in this browser as you go."
+   ]
+  ],
+  "alt": "Wireboard with three areas outlined: Components on the left, the Board in the middle showing a blank Screen 1, and Properties on the right.",
+  "say": "Wireboard has three areas. On the left are the components you can add. In the middle is the board, which holds your screens. On the right is the properties panel, where you change whatever you have selected. It opens with one blank screen, and your work saves automatically in this browser."
+ },
+ {
+  "img": "02-drag-a-component.png",
+  "title": "Drag a component onto the screen",
+  "body": "Press and hold on **Nav bar** in the Components list, drag it onto **Screen 1**, and let go. A nav bar always stretches to the full width of the screen.",
+  "callouts": [
+   [
+    "tip",
+    "You can also just click a component. It is added to the middle of the selected screen."
+   ]
+  ],
+  "alt": "The Nav bar component being dragged from the Components list onto Screen 1, with a blue Nav bar label following the pointer.",
+  "say": "Press and hold on Nav bar in the components list, drag it onto your screen, and let go. If you prefer, you can simply click a component and it will be added to the middle of the selected screen."
+ },
+ {
+  "img": "03-build-the-layout.png",
+  "title": "Build up the layout",
+  "body": "Drag in a **Heading**, a **Text block**, a **Button** and an **Image** to make a simple page. Components snap to an 8 pixel grid so they line up neatly.",
+  "callouts": [
+   [
+    "tip",
+    "Turn **Snap** off in the toolbar if you want to place things freely."
+   ]
+  ],
+  "alt": "Screen 1 with a nav bar, a page heading, grey text lines, a dark button and an image placeholder with a cross through it.",
+  "say": "Keep dragging components in to build a simple page: a heading, a text block, a button and an image. Everything snaps to a small grid so it lines up neatly. You can turn snap off in the toolbar if you want to place things freely."
+ },
+ {
+  "img": "04-edit-the-text.png",
+  "title": "Edit the text",
+  "body": "Click the button on the screen to select it. Properties now shows a **Text** box. Select the wording and type **Get started**. The button updates as you type.",
+  "callouts": [
+   [
+    "tip",
+    "Double-click a component to jump straight to its text."
+   ],
+   [
+    "tip",
+    "For a nav bar, tabs, a list or a side menu, put each item on its own line."
+   ]
+  ],
+  "alt": "The button is selected on Screen 1 and the Text box in Properties is highlighted, now reading Get started.",
+  "say": "Click the button to select it. The properties panel now shows a text box. Replace the wording with Get started, and the button updates as you type. For nav bars, tabs and lists, put each item on its own line."
+ },
+ {
+  "img": "05-move-and-resize.png",
+  "title": "Move and resize",
+  "body": "Drag a component to move it. To resize, drag one of the small square handles around its edge. For exact numbers, type them into **X**, **Y**, **W** and **H** in Properties.",
+  "callouts": [
+   [
+    "tip",
+    "Arrow keys nudge a selected component by 1 pixel, or 8 with Shift held."
+   ],
+   [
+    "warning",
+    "Made a mistake? Press **Undo** in the toolbar, or Ctrl + Z (Cmd + Z on a Mac)."
+   ]
+  ],
+  "alt": "The image placeholder is selected and has been made larger. The bottom-right resize handle is highlighted, along with the X, Y, W and H boxes in Properties.",
+  "say": "Drag a component to move it. To resize it, drag one of the small square handles around its edge, or type exact numbers into the position and size boxes. If you make a mistake, press Undo, or Control Z."
+ },
+ {
+  "img": "06-add-a-screen.png",
+  "title": "Add another screen",
+  "body": "In Properties, under **Screens**, click **+ Add screen**. A new screen appears to the right of the last one and is selected. You can rename it in the **Name** box.",
+  "callouts": [
+   [
+    "tip",
+    "Click a screen's name in the Screens list to jump straight to it on the board."
+   ]
+  ],
+  "alt": "The Add screen button is highlighted in Properties. The Screens list now shows Screen 1 and Screen 2, and the board shows the new empty Screen 2.",
+  "say": "In the properties panel, under Screens, click Add screen. A new screen appears to the right of the last one and is selected. You can rename it in the Name box, and click any screen in the list to jump to it."
+ },
+ {
+  "img": "07-add-a-phone-bezel.png",
+  "title": "Add a phone bezel",
+  "body": "With the new empty screen selected, scroll down Components to **Phone bezels** and click **iPhone**. The screen resizes to fit the phone frame. Click **Fit** in the toolbar to see all your screens.",
+  "callouts": [
+   [
+    "tip",
+    "There are four bezels: **iPhone**, **iPhone Pro Max**, **iPhone notch** and **Android**."
+   ],
+   [
+    "warning",
+    "Add the bezel while the screen is still empty. On a screen that already has content, the bezel goes behind it but the screen keeps its old size."
+   ]
+  ],
+  "alt": "The iPhone component under Phone bezels is highlighted. Screen 2 on the board now shows an empty phone outline with a pill-shaped cutout at the top.",
+  "say": "Select your new, empty screen. Then scroll down the components to Phone bezels and click iPhone. The screen resizes to fit the phone frame. Click Fit in the toolbar to see all your screens at once."
+ },
+ {
+  "img": "08-lock-the-bezel.png",
+  "title": "Lock the bezel",
+  "body": "Click the phone frame to select it, then click **Lock** in Properties. Its outline turns dashed and it can no longer be moved, resized or deleted. Click **Unlock** when you do want to change it.",
+  "callouts": [
+   [
+    "why",
+    "Locking stops you dragging the frame by accident when you meant to move something sitting on top of it."
+   ]
+  ],
+  "alt": "The phone bezel is selected with a dashed outline. The Lock button in Properties now reads Unlock and is highlighted.",
+  "say": "Click the phone frame to select it, then click Lock. Now it cannot be moved, resized or deleted by accident while you build on top of it. Click Unlock whenever you do want to change it."
+ },
+ {
+  "img": "09-build-inside-the-phone.png",
+  "title": "Build inside the phone",
+  "body": "Drag a **Heading**, an **Image** and an **Outline button** onto the phone screen, the same way as before.",
+  "callouts": [
+   [
+    "tip",
+    "Dragging on the locked bezel moves the whole board instead, so you can still pan around."
+   ]
+  ],
+  "alt": "Screen 2 shows the phone bezel containing a page heading, an image placeholder and an outline button.",
+  "say": "Now drag a heading, an image and an outline button onto the phone screen, just as before. Because the bezel is locked, dragging on the frame itself moves the board instead of the phone."
+ },
+ {
+  "img": "10-link-to-another-screen.png",
+  "title": "Link a component to another screen",
+  "body": "On Screen 1, click the **Get started** button. In Properties, open **When clicked, go to** and choose **Screen 2**. A blue arrow appears on the board to show the link.",
+  "callouts": [
+   [
+    "tip",
+    "For a nav bar, tabs or a list you can link each item to a different screen."
+   ],
+   [
+    "tip",
+    "Choose **Previous screen (back)** to make a back button."
+   ]
+  ],
+  "alt": "The Get started button on Screen 1 is selected and the When clicked, go to dropdown is set to Screen 2. A blue arrow runs from the button to the phone screen.",
+  "say": "On the first screen, click the Get started button. In the properties panel, open When clicked, go to, and choose Screen 2. A blue arrow appears on the board to show the link between the two screens."
+ },
+ {
+  "img": "11-set-the-start-screen.png",
+  "title": "Choose the start screen",
+  "body": "Click an empty part of a screen to select the screen itself. Under **Preview**, click **Start the preview from this screen**. A ▶ symbol marks the start screen on the board and in the Screens list.",
+  "callouts": [
+   [
+    "tip",
+    "Until you choose one, the preview starts on the first screen. You can change the start screen at any time."
+   ]
+  ],
+  "alt": "Screen 1 is selected. In Properties a label reads Preview starts on this screen, and the screen title on the board has a play symbol in front of it.",
+  "say": "Click an empty part of a screen to select the screen itself. Under Preview, click Start the preview from this screen. A small play symbol marks it as the start. You can change this whenever you like."
+ },
+ {
+  "img": "12-preview-the-flow.png",
+  "title": "Preview the flow",
+  "body": "Click **▶ Preview** in the toolbar. Your prototype opens on the start screen, full size, without the editing tools. Click the **Get started** button.",
+  "callouts": [
+   [
+    "tip",
+    "Not sure what is clickable? Click a blank area and the linked items flash blue."
+   ]
+  ],
+  "alt": "The preview showing Screen 1 at full size on a dark background, with the Get started button highlighted and the screen name in the top bar.",
+  "say": "Click Preview in the toolbar. Your prototype opens on the start screen, without any of the editing tools. Click the Get started button. If you are not sure what can be clicked, click a blank area and the links flash blue."
+ },
+ {
+  "img": "13-click-through.png",
+  "title": "Click through and come back",
+  "body": "You are now on **Screen 2**, as the top bar shows. Click **← Back** to return to the previous screen. Click **✕ Exit preview** to go back to editing.",
+  "callouts": [
+   [
+    "tip",
+    "Pressing Esc also leaves the preview."
+   ]
+  ],
+  "alt": "The preview now shows the phone screen, Screen 2. The Exit preview and Back buttons in the top bar are highlighted.",
+  "say": "You are now on Screen 2, just as a user would be. Click Back to return to the previous screen, or Exit preview to go back to editing. Pressing Escape also leaves the preview."
+ },
+ {
+  "img": "14-light-and-dark-mode.png",
+  "title": "Switch between light and dark mode",
+  "body": "Click **Dark mode** in the toolbar. The button then says **Light mode** so you can switch back. Your choice is remembered next time.",
+  "callouts": [
+   [
+    "tip",
+    "Only the tool changes colour. The wireframes stay white with dark outlines in both modes."
+   ]
+  ],
+  "alt": "Wireboard in dark mode, with dark panels and board. The Light mode button in the toolbar is highlighted.",
+  "say": "Click Dark mode in the toolbar to switch the tool to dark colours. The button then says Light mode, so you can switch back. Only the tool changes. Your wireframes stay white."
+ },
+ {
+  "img": "15-export-images.png",
+  "title": "Export screens as images",
+  "body": "Click **Project** in the toolbar. Under **Export screens as images**, click **Selected screen as PNG** for one screen, or **All screens as PNGs** for every screen. Insert them into slides or documents like any picture.",
+  "callouts": [
+   [
+    "tip",
+    "Images are saved at double size so they stay sharp on slides."
+   ],
+   [
+    "tip",
+    "Select the screen you want first, then open Project."
+   ]
+  ],
+  "alt": "The Project dialog is open. The Selected screen as PNG and All screens as PNGs buttons are highlighted.",
+  "say": "Click Project in the toolbar. Under Export screens as images, choose Selected screen as PNG for one screen, or All screens for every screen. You can then put them into slides or documents like any other picture."
+ },
+ {
+  "img": "16-save-and-share.png",
+  "title": "Save a copy and share a prototype",
+  "body": "In the same dialog, **Download project file** saves your work as a file you can keep or open on another computer, using **Open a project**. **Download prototype page** makes a single web page with just the clickable preview, which anyone can open in a browser.",
+  "callouts": [
+   [
+    "warning",
+    "Your work is only saved in this browser. Clearing your browsing data deletes it, so download a project file regularly."
+   ]
+  ],
+  "alt": "The Project dialog with the Save a copy buttons and the Share a prototype buttons highlighted.",
+  "say": "In the same dialog, Download project file saves your work so you can keep it or open it on another computer. Download prototype page makes a single web page with just the clickable preview. Remember, your work only saves in this browser, so download a copy regularly."
+ }
+];
+
+(function(){
+'use strict';
+var KEY = 'wireboard-tutorial';
+var st = {done:{}, cur:0, mode:'one', auto:false, source:'rec', voice:'', rate:1};
+try{ var saved = JSON.parse(localStorage.getItem(KEY)); if (saved) for (var k in saved) st[k] = saved[k]; }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} }
+var $ = function(id){ return document.getElementById(id); };
+var N = STEPS.length;
+if (st.cur >= N || st.cur < 0) st.cur = 0;
+
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function md(s){ return esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
+var LABEL = {tip:'Tip:', warning:'Watch out:', why:'Why this matters:'};
+function pad(n){ return (n<10?'0':'')+n; }
+
+/* Build */
+var tocH = '', stepsH = '';
+STEPS.forEach(function(s, i){
+  var n = i+1;
+  tocH += '<li><button type="button" data-go="'+i+'"><span class="n">'+pad(n)+'</span><span>'+esc(s.title)+'</span><span class="ok" aria-hidden="true"></span></button></li>';
+  stepsH += '<section class="card" id="step-'+n+'" aria-labelledby="h-'+n+'" data-i="'+i+'">'+
+    '<div class="chead"><span class="num">'+pad(n)+'</span><h2 id="h-'+n+'">'+esc(s.title)+'</h2></div>'+
+    '<p class="body">'+md(s.body)+'</p>'+
+    (s.callouts||[]).map(function(c){ return '<p class="call '+c[0]+'"><b class="k">'+LABEL[c[0]]+'</b>'+md(c[1])+'</p>'; }).join('')+
+    '<figure><button type="button" class="zoom" data-zoom="'+i+'" aria-label="Enlarge screenshot for step '+n+'"><img src="images/'+esc(s.img)+'" alt="'+esc(s.alt)+'" width="1280" height="800" loading="'+(i<2?'eager':'lazy')+'"></button>'+
+    '<figcaption>Step '+n+' screenshot. Pink outlines show where to look.</figcaption></figure>'+
+    '<div class="cfoot"><div class="narr" role="group" aria-label="Narration for step '+n+'">'+
+      '<button type="button" class="btn" data-play="'+i+'">▶ Play</button>'+
+      '<button type="button" class="btn" data-stop="'+i+'">■ Stop</button></div>'+
+    '<label class="done"><input type="checkbox" data-done="'+i+'"'+(st.done[i]?' checked':'')+'> Mark as done</label></div>'+
+  '</section>';
+});
+$('toc').innerHTML = tocH; $('steps').innerHTML = stepsH;
+$('m-steps').textContent = N+' steps';
+var cards = document.querySelectorAll('.card');
+
+function update(announce){
+  cards.forEach(function(c, i){ c.classList.toggle('cur', i===st.cur); });
+  document.querySelectorAll('#toc button').forEach(function(b, i){
+    if (st.mode==='one' && i===st.cur) b.setAttribute('aria-current','step'); else b.removeAttribute('aria-current');
+    b.querySelector('.ok').textContent = st.done[i] ? '✓' : '';
+    b.setAttribute('aria-label', 'Step '+(i+1)+': '+STEPS[i].title+(st.done[i]?', done':''));
+  });
+  var doneCount = Object.keys(st.done).filter(function(k){ return st.done[k]; }).length;
+  if (st.mode==='one'){
+    $('ptext').textContent = 'Step '+(st.cur+1)+' of '+N;
+    $('pbar').style.width = ((st.cur+1)/N*100)+'%';
+  } else {
+    $('ptext').textContent = doneCount+' of '+N+' done';
+    $('pbar').style.width = (doneCount/N*100)+'%';
+  }
+  $('prev').disabled = st.cur===0;
+  $('next').disabled = st.cur===N-1;
+  $('next').textContent = st.cur===N-1 ? 'Finished' : 'Next →';
+  if (announce) $('live').textContent = 'Step '+(st.cur+1)+' of '+N+': '+STEPS[st.cur].title;
+}
+function go(i, focus){
+  i = Math.max(0, Math.min(N-1, i));
+  stop();
+  st.cur = i; save(); update(true);
+  var c = cards[i];
+  if (st.mode==='all') c.scrollIntoView({block:'start'});
+  else window.scrollTo({top: Math.max(0, document.querySelector('.layout').offsetTop - 70)});
+  if (focus) c.querySelector('h2').setAttribute('tabindex','-1'), c.querySelector('h2').focus({preventScroll:true});
+  if (st.auto && st.mode==='one') play(i);
+}
+function setMode(m){
+  stop(); st.mode = m; save();
+  $('main').className = 'mode-'+m;
+  $('v-one').setAttribute('aria-pressed', m==='one'); $('v-all').setAttribute('aria-pressed', m==='all');
+  update(false);
+}
+
+$('v-one').onclick = function(){ setMode('one'); };
+$('v-all').onclick = function(){ setMode('all'); };
+$('prev').onclick = function(){ go(st.cur-1, true); };
+$('next').onclick = function(){ go(st.cur+1, true); };
+$('toc').addEventListener('click', function(e){ var b = e.target.closest('[data-go]'); if (b) go(+b.dataset.go, true); });
+$('steps').addEventListener('change', function(e){
+  var d = e.target.dataset.done; if (d === undefined) return;
+  if (e.target.checked) st.done[d] = true; else delete st.done[d];
+  save(); update(false);
+});
+$('steps').addEventListener('click', function(e){
+  var p = e.target.closest('[data-play]'), s = e.target.closest('[data-stop]'), z = e.target.closest('[data-zoom]');
+  if (p) toggle(+p.dataset.play);
+  else if (s) stop();
+  else if (z) openLb(+z.dataset.zoom, z);
+});
+document.addEventListener('keydown', function(e){
+  if (!$('lb').hidden){
+    if (e.key==='Escape') closeLb();
+    if (e.key==='Tab'){ e.preventDefault(); $('lb-close').focus(); }
+    return;
+  }
+  var t = e.target.tagName;
+  if (t==='INPUT' || t==='SELECT' || t==='TEXTAREA' || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (st.mode==='one' && e.key==='ArrowRight'){ e.preventDefault(); go(st.cur+1, true); }
+  if (st.mode==='one' && e.key==='ArrowLeft'){ e.preventDefault(); go(st.cur-1, true); }
+});
+
+/* Lightbox */
+var lbReturn = null;
+function openLb(i, from){
+  lbReturn = from; $('lb-img').src = 'images/'+STEPS[i].img; $('lb-img').alt = STEPS[i].alt;
+  $('lb-t').textContent = 'Step '+(i+1)+': '+STEPS[i].title; $('lb').hidden = false; $('lb-close').focus();
+}
+function closeLb(){ $('lb').hidden = true; if (lbReturn) lbReturn.focus(); }
+$('lb-close').onclick = closeLb;
+$('lb').addEventListener('click', function(e){ if (e.target===this || e.target.classList.contains('lbimg')) closeLb(); });
+
+/* Narration */
+var synth = window.speechSynthesis || null, audio = null, playing = -1, voices = [];
+function btnFor(i){ return document.querySelector('[data-play="'+i+'"]'); }
+function setPlaying(i){
+  if (playing >= 0){ cards[playing].classList.remove('reading'); var ob = btnFor(playing); if (ob) ob.textContent = '▶ Play'; }
+  playing = i;
+  if (i >= 0){ cards[i].classList.add('reading'); btnFor(i).textContent = '❚❚ Pause'; }
+}
+function stop(){
+  if (audio){ audio.pause(); audio = null; }
+  if (synth) synth.cancel();
+  setPlaying(-1);
+}
+function speak(i){
+  if (!synth){ setPlaying(-1); return; }
+  var u = new SpeechSynthesisUtterance(STEPS[i].say);
+  var v = voices.filter(function(x){ return x.voiceURI===st.voice; })[0];
+  if (v){ u.voice = v; u.lang = v.lang; } else u.lang = 'en-GB';
+  u.rate = st.rate;
+  u.onend = u.onerror = function(){ if (playing===i) setPlaying(-1); };
+  synth.speak(u);
+}
+function play(i){
+  stop(); setPlaying(i);
+  if (st.source==='rec'){
+    audio = new Audio('audio/'+pad(i+1)+'.mp3');
+    audio.playbackRate = st.rate;
+    audio.onended = function(){ if (playing===i){ audio = null; setPlaying(-1); } };
+    audio.onerror = function(){ audio = null; if (playing===i) speak(i); };
+    var pr = audio.play(); if (pr && pr.catch) pr.catch(function(){ if (playing===i && audio){ audio = null; speak(i); } });
+  } else speak(i);
+}
+function toggle(i){
+  if (playing===i){
+    if (audio){ if (audio.paused){ audio.play(); btnFor(i).textContent='❚❚ Pause'; } else { audio.pause(); btnFor(i).textContent='▶ Resume'; } return; }
+    if (synth && synth.speaking){ if (synth.paused){ synth.resume(); btnFor(i).textContent='❚❚ Pause'; } else { synth.pause(); btnFor(i).textContent='▶ Resume'; } return; }
+  }
+  play(i);
+}
+function loadVoices(){
+  if (!synth) return;
+  voices = synth.getVoices();
+  var en = voices.filter(function(v){ return /^en/i.test(v.lang); }), other = voices.filter(function(v){ return !/^en/i.test(v.lang); });
+  en.sort(function(a,b){ var ag = /GB/i.test(a.lang)?0:1, bg = /GB/i.test(b.lang)?0:1; return ag-bg || a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name); });
+  if (!st.voice || !voices.some(function(v){ return v.voiceURI===st.voice; })){
+    var pick = en.filter(function(v){ return /GB/i.test(v.lang); })[0] || en[0] || voices[0];
+    if (pick) st.voice = pick.voiceURI;
+  }
+  function opts(list){ return list.map(function(v){ return '<option value="'+esc(v.voiceURI)+'"'+(v.voiceURI===st.voice?' selected':'')+'>'+esc(v.name)+' ('+esc(v.lang)+')</option>'; }).join(''); }
+  $('voice').innerHTML = (en.length?'<optgroup label="English">'+opts(en)+'</optgroup>':'')+(other.length?'<optgroup label="Other languages">'+opts(other)+'</optgroup>':'') || '<option value="">No browser voices found</option>';
+}
+if (synth){ loadVoices(); try{ synth.addEventListener('voiceschanged', loadVoices); }catch(e){ synth.onvoiceschanged = loadVoices; } }
+else { $('source').querySelector('[value="tts"]').disabled = true; st.source = 'rec'; }
+function syncVoiceUI(){ $('voice-wrap').hidden = st.source!=='tts'; }
+$('source').value = st.source; syncVoiceUI();
+$('source').onchange = function(){ st.source = this.value; save(); syncVoiceUI(); stop(); };
+$('voice').onchange = function(){ st.voice = this.value; save(); };
+$('rate').value = st.rate; $('rate-v').textContent = (+st.rate).toFixed(2).replace(/0$/,'').replace(/\.0$/,'')+'×';
+$('rate').oninput = function(){ st.rate = +this.value; $('rate-v').textContent = st.rate.toFixed(2).replace(/0$/,'').replace(/\.0$/,'')+'×'; if (audio) audio.playbackRate = st.rate; save(); };
+$('autoplay').checked = !!st.auto;
+$('autoplay').onchange = function(){ st.auto = this.checked; save(); };
+
+/* Theme */
+var root = document.documentElement;
+try{ var th = localStorage.getItem(KEY+'-theme'); if (th) root.setAttribute('data-theme', th); }catch(e){}
+function isDark(){ var a = root.getAttribute('data-theme'); return a ? a==='dark' : !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches); }
+function themeLabel(){ $('theme').textContent = isDark() ? 'Light mode' : 'Dark mode'; }
+$('theme').onclick = function(){ var t = isDark() ? 'light' : 'dark'; root.setAttribute('data-theme', t); try{ localStorage.setItem(KEY+'-theme', t); }catch(e){} themeLabel(); };
+themeLabel();
+try{ new MutationObserver(themeLabel).observe(root, {attributes:true, attributeFilter:['data-theme']}); }catch(e){}
+
+setMode(st.mode);
+update(false);
+})();
+</script>
+</body>
+</html>
