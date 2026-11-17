@@ -1,6 +1,6 @@
 # Wireboard
 
-![wireboard logo](wireboard_logo.png)
+![wireboard logo](assets/wireboard_logo.png)
 
 **Wireboard** is a browser-based tool for creating wireframes and linking screens into clickable prototypes. It runs from a single HTML file and requires no build step or package installation.
 
@@ -8,7 +8,7 @@
 
 ## Features
 
-![wireboard app](wireboard.png)
+![wireboard app](assets/wireboard.png)
 
 - Create desktop, tablet, and phone-sized screens.
 - Build layouts from components for text, buttons, forms, navigation, lists, cards, tables, phone bezels, and more.
