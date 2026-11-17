@@ -122,6 +122,11 @@ figcaption{font-size:13px;color:var(--muted);margin-top:6px}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:14px}
 footer .wrap{padding-top:18px;padding-bottom:28px}
 
+.promo{background:var(--panel);border-bottom:1px solid var(--line)}
+.promo .wrap{padding-top:20px;padding-bottom:16px}
+.promo video{display:block;width:100%;max-height:70vh;aspect-ratio:16/9;object-fit:contain;background:#0d1117;border-radius:10px}
+.promo nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px}
+
 @media (max-width:860px){
   .layout{grid-template-columns:1fr}
   nav.toc{position:static;max-height:none}
@@ -140,6 +145,19 @@ footer .wrap{padding-top:18px;padding-bottom:28px}
 </style>
 </head>
 <body>
+
+<section class="promo" aria-label="Wireboard video and links">
+  <div class="wrap">
+    <video controls playsinline preload="metadata" aria-label="Wireboard tutorial video">
+      <source src="../assets/wireboard-promo.mp4" type="video/mp4">
+      Your browser does not support HTML video.
+    </video>
+    <nav aria-label="Project links">
+      <a href="../index.html">Open the Wireboard app</a>
+      <a href="https://github.com/martinsolent/wireboard_app">View the GitHub repository</a>
+    </nav>
+  </div>
+</section>
 
 <header class="top">
   <div class="wrap">

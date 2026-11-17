@@ -4,7 +4,7 @@
 
 **Wireboard** is a browser-based tool for creating wireframes and linking screens into clickable prototypes. It runs from a single HTML file and requires no build step or package installation.
 
-[Watch the Wireboard tutorial](https://martinsolent.github.io/wireboard_app/tutorial.html)
+[Watch the Wireboard tutorial](https://martinsolent.github.io/wireboard_app/wireboard-tutorial/tutorial_audio.html)
 
 ## Features
 
