@@ -6,6 +6,8 @@
 
 [Watch the Wireboard tutorial](https://martinsolent.github.io/wireboard_app/wireboard-tutorial/tutorial_audio.html)
 
+[Open the Wireboard prototype app](https://martinsolent.github.io/wireboard_app/)
+
 ## Features
 
 ![wireboard app](assets/wireboard.png)
